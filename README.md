@@ -8,42 +8,72 @@
 5. If your frames reach the server it will send ACK signal to client
 6. Stop the Program
 ## PROGRAM
-client
+## CLIENT
 ```
 import socket
+
+# Create a socket
 s = socket.socket()
-s.bind(('localhost', 8000))
+s.connect(('localhost', 8001))
+print("Connected to the server successfully!")
+while True:
+    data = s.recv(1024).decode()
+    if not data:
+        print("No more frames to receive. Closing connection.")
+        break
+
+    print(f"Received frames: {data}")
+    
+    # Send acknowledgment back to the server
+    s.send("Acknowledgment received from client.".encode())
+
+s.close()
+```
+## SERVER
+```
+import socket
+
+# Create a socket
+s = socket.socket()
+s.bind(('localhost', 8001))
 s.listen(5)
+print("Server is waiting for connection...")
+
+# Accept connection
 c, addr = s.accept()
+print("Connected with:", addr)
 
-size = int(input("Enter number of frames to send : "))
-l = list(range(size))
-s = int(input("Enter Window Size : "))
-st = 0
-i = 0
+# Input number of frames
+size = int(input("Enter number of frames to send: "))
+frames = list(range(size))
 
-while True:
-    while (i < len(l)):
-        st = st + s
-        c.send(str(l[i:st]).encode())
-        ack = c.recv(1024).decode()
-        if ack:
-            print(ack)
-            i += s
-```
-server
-```
-import socket
-s = socket.socket()
-s.connect(('localhost', 8000))
+# Input window size
+window_size = int(input("Enter Window Size: "))
 
-while True:
-    print(s.recv(1024).decode())
-    s.send("acknowledgement received from the server".encode())
+start = 0  # Starting frame index
+
+# Send frames in windows
+while start < len(frames):
+    end = start + window_size
+    window = frames[start:end]
+    print(f"Sending frames: {window}")
+    
+    # Send the current window
+    c.send(str(window).encode())
+    
+    # Wait for acknowledgment
+    ack = c.recv(1024).decode()
+    if ack:
+        print(f"Acknowledgment received for frames up to: {ack}")
+        start += window_size  # Move the window
+
+print("All frames sent successfully.")
+c.close()
+s.close()
 ```
 
 ## OUPUT
-<img width="1859" height="427" alt="image" src="https://github.com/user-attachments/assets/2054f848-f630-474b-ad78-86c68abf8466" />
+<img width="1847" height="424" alt="Screenshot 2025-10-30 090629" src="https://github.com/user-attachments/assets/7b1cc58e-86bc-4964-9b93-083cde1fdcf9" />
 
 ## RESULT
 Thus, python program to perform stop and wait protocol was successfully executed
